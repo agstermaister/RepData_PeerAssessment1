@@ -7,19 +7,85 @@ output:
 
 
 ## Loading and preprocessing the data
-
-
+### Loading libaries
+```{r library, echo = TRUE}
+library(ggplot2)
+library(dplyr)
+```
+### Read data
+```{r read_data, echo = TRUE}
+unzip("activity.zip")
+activity_df <- read.csv("activity.csv")
+```
+### Set date column to date type
+```{r date_type, echo = TRUE}
+activity_df$date <- as.Date(activity_df$date)
+```
 
 ## What is mean total number of steps taken per day?
-
-
+### Group by date and add up steps 
+```{r groupby_date_sum, echo = TRUE}
+activity_gb <- activity_df %>% group_by(date) %>% summarise(Sum = sum(steps))
+```
 
 ## What is the average daily activity pattern?
+```{r histo1}
+ggplot(activity_gb, aes(x = Sum)) +
+geom_histogram(bins=22,fill = "blue", color = "black",na.rm = TRUE,aes(y = after_stat(count))) + labs(title = "Histogram of Total Steps per Day",x = "Total Steps", y = "Frequency") + theme_minimal() + scale_y_continuous(breaks = seq(0, 10, by = 1))
+```
 
+```{r avg}
+mean(activity_gb$Sum,na.rm = TRUE)
+median(activity_gb$Sum,na.rm = TRUE)
+```
 
+```{r m}
+mean_interval <- activity_df %>% group_by(interval) %>% summarise(mean_int = mean(steps, na.rm = TRUE))
+```
+
+```{r n}
+ggplot(mean_interval, aes(x = interval, y = mean_int)) +
+        geom_line() +
+        ggtitle("Average number of steps by interval") +
+        xlab("Interval") +
+        ylab("Average number of steps")
+```
+
+```{r o}
+row_index <- which.max(mean_interval$mean_int)
+high_int <- mean_interval$interval[row_index]
+high_int
+```
 
 ## Imputing missing values
+###rows with NAs
+```{r n}
+rows_with_nas <- sum(apply(activity_df, 1, function(row) any(is.na(row))))
+activity_avg <- left_join(activity_df, mean_interval, by = "interval")
+activity_avg$steps2 <- activity_avg$steps
+activity_avg$steps2[is.na(activity_avg$steps2)] <- activity_avg$mean_int[is.na(activity_avg$steps2)]
+```
 
-
+```{r p}
+activity_avg_gb <- activity_avg %>% group_by(date) %>% summarise(sum_value = sum(steps2))
+ggplot(activity_avg_gb, aes(x = sum_value)) +
+        geom_histogram( bins=22, fill = "blue", color = "black",na.rm = TRUE) 
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r a}
+activity_avg$day <- weekdays(activity_avg$date)
+activity_avg$day_type <- ifelse(activity_avg$day %in% c("Saturday", "Sunday"), "Weekend", "Weekday")
+activity_avg <- activity_avg %>% mutate(day_type =factor(day_type))
+
+act_mean_interval <- activity_avg %>% group_by(interval, day_type) %>% summarise(mean_int = mean(steps, na.rm = TRUE))
+```
+
+```{r s}
+ggplot(act_mean_interval, aes(x = interval, y = mean_int)) +
+        geom_line() +
+        facet_wrap(~day_type, nrow = 1) +
+        ggtitle("Average number of steps by interval") +
+        xlab("Interval") +
+        ylab("Average number of steps")
+```

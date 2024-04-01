@@ -7,24 +7,27 @@ output:
 
 
 ## Loading and preprocessing the data
-### Loading libaries
-```{r library, echo = TRUE}
+```{r library, echo = FALSE}
+# Loading libaries
 library(ggplot2)
 library(dplyr)
 ```
-### Read data
+
 ```{r read_data, echo = TRUE}
+# Read data
 unzip("activity.zip")
 activity_df <- read.csv("activity.csv")
 ```
-### Set date column to date type
+
 ```{r date_type, echo = TRUE}
+# Set date column to date type
 activity_df$date <- as.Date(activity_df$date)
 ```
 
 ## What is mean total number of steps taken per day?
-### Group by date and add up steps 
+
 ```{r groupby_date_sum, echo = TRUE}
+# Group by date and add up steps 
 activity_gb <- activity_df %>% group_by(date) %>% summarise(Sum = sum(steps))
 ```
 
@@ -59,7 +62,7 @@ high_int
 
 ## Imputing missing values
 ###rows with NAs
-```{r n}
+```{r kk}
 rows_with_nas <- sum(apply(activity_df, 1, function(row) any(is.na(row))))
 activity_avg <- left_join(activity_df, mean_interval, by = "interval")
 activity_avg$steps2 <- activity_avg$steps
